@@ -1,0 +1,61 @@
+---
+title: "Introduction to `tmap`"
+author: "Jason Flower, UC Santa Barbara"
+date: "`r Sys.Date()`"
+toc: true
+number-sections: false
+format: 
+  html:
+    self-contained: true
+    code-tools: true
+    df-print: paged
+    fig-width: 8
+    code-summary: "Show the code"
+    code-overflow: wrap
+---
+
+# Introduction
+
+This workshop will provide you with an introduction to making maps in R using the R package `tmap`. `tmap` is a relatively simple, but powerful, map making package. The code syntax will look somewhat familiar to `ggplot2` users. Although `ggplot2` can be used for map making, `tmap` is specifically designed for that purpose, and offers greater capabilities such as handling a wider variety of spatial data types and easy interactive mapping.
+
+Basic knowledge of R and spatial data is assumed for this workshop.
+
+We will cover:
+
+
+
+
+*Resources*:
+
+- The official `tmap` [website](https://r-tmap.github.io/tmap/){target="_blank"}, which includes many examples.
+- [Elegant and informative maps with tmap](https://r-tmap.github.io/tmap-book/){target="_blank"}. An in-progress books written by the developers of `tmap`.
+- The [Geocomputation with R: 9 Making Maps in R](https://r.geocompx.org/adv-map#static-maps){target="_blank"} book chapter. The entire books is available free online and is an excellent resource on map making and geospatial data in R in general.
+
+## Prerequisites 
+
+Apart from `tmap`, we will use the `terra` package for loading and manipulating spatial data. Both packages can be loaded using the following code
+
+```{r}
+#| eval: false
+
+install.packages(c("terra", "tmap"))
+```
+
+We can now load the packages:
+
+```{r}
+library(terra)
+library(tmap)
+```
+
+We will also load the data we will use.
+
+```{r}
+gbr_boundary <- vect("https://services-ap1.arcgis.com/8gXWSCxaJlFIfiTr/arcgis/rest/services/Great_Barrier_Reef_Marine_Park_Boundary_20/FeatureServer/replicafilescache/Great_Barrier_Reef_Marine_Park_Boundary_20_2474222838331219096.gpkg")
+
+
+bathy <- ocenadatr::get_bathymetry()
+
+
+```
+
