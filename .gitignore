@@ -44,3 +44,6 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+# Large datasets
+data/gbr_area_sst_2022_2023.nc

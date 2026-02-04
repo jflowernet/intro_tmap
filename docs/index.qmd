@@ -25,6 +25,7 @@ We will cover:
 
 
 
+`tmap` recently underwent a major upgrade with the release of version 4. 
 *Resources*:
 
 - The official `tmap` [website](https://r-tmap.github.io/tmap/){target="_blank"}, which includes many examples.
@@ -48,14 +49,116 @@ library(terra)
 library(tmap)
 ```
 
-We will also load the data we will use.
+We are going to make a map using data for the Great Barrier Reef (GBR) Marine Park in Australia.
 
 ```{r}
-gbr_boundary <- vect("https://services-ap1.arcgis.com/8gXWSCxaJlFIfiTr/arcgis/rest/services/Great_Barrier_Reef_Marine_Park_Boundary_20/FeatureServer/replicafilescache/Great_Barrier_Reef_Marine_Park_Boundary_20_2474222838331219096.gpkg")
+#load a geopackage with boundary of the Great Barrier Reef marine park
+gbr_boundary <- vect("../data/gbr_MPA_boundary.gpkg")
 
+#load a raster with sea surface temperature for the Great Barrier Reef
+gbr_sst <- rast("../data/gbr_sst.tif")
+```
 
-bathy <- ocenadatr::get_bathymetry()
+Now we have some data loaded, lets jump straight into some map making. `tmap` is like the `ggplot` package: you have to tell it the layer you want to map, using `tm_shape()` and how you want to map that layer. Let's try this with the data we have just loaded:
 
+```{r}
+tm_shape(gbr_boundary) +
+  tm_polygons()
+```
 
+We have a map! It shows the boundary of the Great Barrier Reef Marine Park. We used `tm_polygons()` because we want the polygon filled with a colour and a border drawn around it. You can also use `tm_fill()` or `tm_borders()` if you only want the polygon filled, or only the border. Here is a comparison:
+
+```{r}
+#| code-fold: true
+map_fill <- tm_shape(gbr_boundary) +
+  tm_fill() +
+  tm_layout(panel.labels = "tm_fill()")
+
+map_border <- tm_shape(gbr_boundary) +
+  tm_borders() +
+  tm_layout(panel.labels = "tm_borders()")
+
+map_polygon <- tm_shape(gbr_boundary) +
+  tm_polygons() +
+  tm_layout(panel.labels = "tm_polygons()")
+
+tmap_arrange(map_fill, map_border, map_polygon)
+```
+
+We have loaded some sea surface temperature data, so lets try and plot that with it. We can just "add" the data onto the boundary we have already mapped:
+
+```{r}
+tm_shape(gbr_boundary) +
+  tm_borders() +
+  tm_shape(gbr_sst) +
+  tm_raster()
+```
+
+We mapped the sea surface temperature data using `tm_raster()` because it is raster data! But why can we only see a few parts of the GBR boundary now? This is because `tmap` stacks the layers in the order we list them. Since the raster was second, it was mapped on top of the boundary, obscuring most of it. 
+
+Let's try again, changing only the order we plotting the data in:
+
+```{r}
+tm_shape(gbr_sst) +
+  tm_raster() +
+tm_shape(gbr_boundary) +
+  tm_borders() 
+```
+
+Better! We now see the boundary plotted over the temperature data.
+
+At the moment the temperature scale is in intervals of 2 degrees, starting at 18 and going up to 30. We might want to show it on a continuous scale and also change the colour palette to something more representative of low to high temperatures. We can control the way the values are displayed using the `col.scale = ` argument to `tm_raster()`. Finding a suitable colour palette can be tricky, but I strongly recommend the `cols4all` package which has a great visual interface to help you choose a palette that not only looks good, but is colour-blind friendly. Use the command `cols4all::c4a_gui()` to access the interface. You will need to close it before you can continue running code.
+
+```{r}
+tm_shape(gbr_sst) +
+  tm_raster(col.scale = tm_scale_continuous(values = "ocean.thermal"),
+            col.legend = tm_legend(title = "SST")) +
+  tm_shape(gbr_boundary) +
+  tm_borders()
+```
+
+I also changed the legend title using the `col.legend = tm_legend(title = "SST")`. The `tm_legend()` function has a lot of options for controlling the legend.
+
+Our map looks pretty good now, but is missing a scale bar. You might also want to add a north arrow. We just need to add one extra line of code for each of these components:
+
+```{r}
+tm_shape(gbr_sst) +
+  tm_raster(col.scale = tm_scale_continuous(values = "ocean.thermal"),
+            col.legend = tm_legend(title = "SST")) +
+  tm_shape(gbr_boundary) +
+  tm_borders() +
+  tm_scalebar(position = c("bottom", "left")) +
+  tm_compass(position = c("top", "right")) +
+  tm_layout(bg.color = "tan")
+```
+
+I have changed the default positions to have them where there is space on the map. I've also changed the background colour to something more appropriate for land.
+
+```{r}
+countries_bordering <- rnaturalearth::ne_countries(scale = 'large', continent = "oceania", returnclass = "sv") |> 
+  crop(gbr_sst)
+
+tm_shape(gbr_sst) +
+  tm_raster(col.scale = tm_scale_continuous(values = "ocean.thermal"),
+            col.legend = tm_legend(title = "SST")) +
+  tm_shape(gbr_boundary) +
+  tm_borders() +
+  tm_shape(countries_bordering) +
+  tm_polygons(fill = "sovereignt",
+              fill.scale = tm_scale_categorical(values = c("tan", "forestgreen")),
+              fill.legend = tm_legend(title = "")) +
+  tm_scalebar(position = c("bottom", "left")) +
+  tm_compass(position = c("top", "right")) 
+```
+
+Interactive
+
+```{r}
+tmap_mode(mode = "view")
+
+  tm_shape(gbr_boundary) +
+  tm_borders() 
+
+tmap_mode("plot")
 ```
 
