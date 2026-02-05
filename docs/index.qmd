@@ -39,7 +39,7 @@ Apart from `tmap`, we will use the `terra` package for loading and manipulating 
 ```{r}
 #| eval: false
 
-install.packages(c("terra", "tmap"))
+install.packages(c("terra", "tmap", "rnaturalearth"))
 ```
 
 We can now load the packages:
@@ -47,9 +47,12 @@ We can now load the packages:
 ```{r}
 library(terra)
 library(tmap)
+library(rnaturalearth) #for adding country boundaries
 ```
 
-We are going to make a map using data for the Great Barrier Reef (GBR) Marine Park in Australia.
+## Getting started with polygons
+
+We are going to make a map using data for the Great Barrier Reef (GBR) Marine Park in Australia. First we will load some geospatial data we will need. 
 
 ```{r}
 #load a geopackage with boundary of the Great Barrier Reef marine park
@@ -85,7 +88,24 @@ map_polygon <- tm_shape(gbr_boundary) +
 tmap_arrange(map_fill, map_border, map_polygon)
 ```
 
-We have loaded some sea surface temperature data, so lets try and plot that with it. We can just "add" the data onto the boundary we have already mapped:
+## Interactive Map
+
+Although we know our map is the GBR marine park boundary, we don't have any other information on our map to get a sense of where it is. Sometimes we just want to see where our data are in the world! A quick and easy way to do that is using `tmap`'s interactive mode:
+
+```{r}
+tmap_mode(mode = "view") #enter interactive mode
+
+  tm_shape(gbr_boundary) +
+  tm_borders() 
+
+tmap_mode("plot") #this takes us back into static map mode
+```
+
+I find this interactive mode very useful for exploring and zooming in on data, much like you might do in QGIS or ArcGIS software. You can use the interactive mode with any `tmap` map you make. 
+
+## Adding raster data
+
+Along with the boundary, we loaded some sea surface temperature data. We can just add this data onto the boundary we have already mapped:
 
 ```{r}
 tm_shape(gbr_boundary) +
@@ -94,9 +114,9 @@ tm_shape(gbr_boundary) +
   tm_raster()
 ```
 
-We mapped the sea surface temperature data using `tm_raster()` because it is raster data! But why can we only see a few parts of the GBR boundary now? This is because `tmap` stacks the layers in the order we list them. Since the raster was second, it was mapped on top of the boundary, obscuring most of it. 
+We mapped the sea surface temperature data using `tm_raster()` because it is raster data. But why can we only see a few parts of the GBR boundary now? This is because `tmap` stacks the layers in the order we list them. Since the raster was second, it was mapped on top of the boundary, obscuring most of it. 
 
-Let's try again, changing only the order we plotting the data in:
+Let's try again, changing only the order of the data:
 
 ```{r}
 tm_shape(gbr_sst) +
@@ -107,7 +127,11 @@ tm_shape(gbr_boundary) +
 
 Better! We now see the boundary plotted over the temperature data.
 
-At the moment the temperature scale is in intervals of 2 degrees, starting at 18 and going up to 30. We might want to show it on a continuous scale and also change the colour palette to something more representative of low to high temperatures. We can control the way the values are displayed using the `col.scale = ` argument to `tm_raster()`. Finding a suitable colour palette can be tricky, but I strongly recommend the `cols4all` package which has a great visual interface to help you choose a palette that not only looks good, but is colour-blind friendly. Use the command `cols4all::c4a_gui()` to access the interface. You will need to close it before you can continue running code.
+## Scales and legends
+
+At the moment the temperature scale is in intervals of 2 degrees, starting at 18 and going up to 30. We might want to show it on a continuous scale and also change the colour palette to something more representative of low to high temperatures. We can control the way the values are displayed using the `col.scale = ` argument to `tm_raster()`. 
+
+Finding a suitable colour palette can be tricky, but I strongly recommend the `cols4all` package which has a great visual interface to help you choose a palette that not only looks good, but is colour-blind friendly. Use the command `cols4all::c4a_gui()` to access the interface. You will need to close it before you can continue running code.
 
 ```{r}
 tm_shape(gbr_sst) +
@@ -117,30 +141,57 @@ tm_shape(gbr_sst) +
   tm_borders()
 ```
 
-I also changed the legend title using the `col.legend = tm_legend(title = "SST")`. The `tm_legend()` function has a lot of options for controlling the legend.
+I also changed the legend title using the `col.legend = tm_legend(title = "SST")`. The `tm_legend()`, like most `tmap` functions, has a lot of options (see `?tm_legend`).
 
-Our map looks pretty good now, but is missing a scale bar. You might also want to add a north arrow. We just need to add one extra line of code for each of these components:
+At the moment, our legend goes from high values at the bottom, to low values at the top. I generally prefer the opposite, and we can easily reverse the legend using `reverse = TRUE`:
 
 ```{r}
 tm_shape(gbr_sst) +
-  tm_raster(col.scale = tm_scale_continuous(values = "ocean.thermal"),
-            col.legend = tm_legend(title = "SST")) +
+  tm_raster(col.scale = tm_scale_continuous(values = "ocean.thermal",
+                                            ticks = seq(19, 30, by =2)),
+            col.legend = tm_legend(title = "SST", 
+                                   reverse = TRUE)) +
+  tm_shape(gbr_boundary) +
+  tm_borders()
+```
+
+When the legend is reversed, the marked values on the legend end up looking a bit odd because the lowest value marked on the scale is 22, even though temperatures go down to `r global(gbr_sst, min, na.rm = TRUE)[[1]]`. To tidy the scale up, I manually set which values are shown on the legend using the `ticks = ` argument to `tm_scale_continuous()`
+
+## Scale bar and compass
+
+Our map looks pretty good now, but is missing a scale bar. You might also want to add a north arrow. There are lots of options for these (see `?tm_scale_bar` and `?tm_compass`), but we will just add the defaults, using just one extra line of code for each of these components:
+
+```{r}
+tm_shape(gbr_sst) +
+  tm_raster(col.scale = tm_scale_continuous(values = "ocean.thermal",
+                                            ticks = seq(19, 30, by =2)),
+            col.legend = tm_legend(title = "SST", 
+                                   reverse = TRUE)) +
   tm_shape(gbr_boundary) +
   tm_borders() +
   tm_scalebar(position = c("bottom", "left")) +
-  tm_compass(position = c("top", "right")) +
-  tm_layout(bg.color = "tan")
+  tm_compass(position = c("top", "right")) 
 ```
 
-I have changed the default positions to have them where there is space on the map. I've also changed the background colour to something more appropriate for land.
+I have changed the default positions for the scale bar and compass to place them where there is space on the map.
+
+## Adding country boundaries
+
+We often want to add country boundaries to a map. The `rnaturalearth` package provides various types of country boundaries at multiple resolutions. We will add polygons for the countries that fall within our map, using high resolution data from `rnaturalearth`, cropped to the area we are mapping:
 
 ```{r}
-countries_bordering <- rnaturalearth::ne_countries(scale = 'large', continent = "oceania", returnclass = "sv") |> 
-  crop(gbr_sst)
+countries_bordering <- rnaturalearth::ne_countries(scale = 'large', continent = "oceania", returnclass = "sv") |> #get data for Oceania as SpatVector (sv)
+  crop(gbr_sst) #crop so that we only have countries within our mapping area
+```
 
+Now that we have the country polygons we need, we can add them to our map. We use the same process as before, using `tm_shape()` to specify the data, and we will use `tm_polygons()` to specify that we want polygons. The Natural Earth data has many columns (attributes) in it which contain information such as the population, G.D.P. and country names in many different languages. We will use the attribute "sovereignt" which is the sovereign state. There are only two states within the area we are mapping, so I will manually specify the colours to fill them, but you could also use a colour palette such as those found using `cols4all::c4a_gui()`.
+
+```{r}
 tm_shape(gbr_sst) +
-  tm_raster(col.scale = tm_scale_continuous(values = "ocean.thermal"),
-            col.legend = tm_legend(title = "SST")) +
+  tm_raster(col.scale = tm_scale_continuous(values = "ocean.thermal",
+                                            ticks = seq(19, 30, by =2)),
+            col.legend = tm_legend(title = "SST", 
+                                   reverse = TRUE)) +
   tm_shape(gbr_boundary) +
   tm_borders() +
   tm_shape(countries_bordering) +
@@ -151,14 +202,88 @@ tm_shape(gbr_sst) +
   tm_compass(position = c("top", "right")) 
 ```
 
-Interactive
+## Facets: Many maps
+
+Often we want to show a grid of maps that all look basically the same, but with one variable different in each one. For example, we might want to show the temperature for several months or years so we can visually compare the maps. 
+
+For raster data, we often store data for the same area in a multi-layer raster. As an example, we will load a multi-layer raster with monthly sea surface temperature for 12 months.
 
 ```{r}
-tmap_mode(mode = "view")
+monthly_sst <- rast("../data/gbr_monthly_sst.tif")
 
+monthly_sst
+```
+
+We can see there are 12 layers (`nlyr`) and the names are the year and month of the data. What happens if we take the code we used above for mapping and just replace the single raster layer with our multi-layer raster?
+
+```{r}
+tm_shape(monthly_sst) +
+  tm_raster(col.scale = tm_scale_continuous(values = "ocean.thermal"),
+            col.legend = tm_legend(title = "SST", 
+                                   reverse = TRUE)) +
   tm_shape(gbr_boundary) +
-  tm_borders() 
+  tm_borders() +
+  tm_shape(countries_bordering) +
+  tm_polygons(fill = "sovereignt",
+              fill.scale = tm_scale_categorical(values = c("tan", "forestgreen")),
+              fill.legend = tm_legend(title = ""))
+```
 
-tmap_mode("plot")
+Impressive! `tmap` automatically makes a grid of small maps (facets). I removed the scale bar and north arrow otherwise the maps would be a bit crowded, but you can leave them in if you like. I also removed the parts of the code that specified the `limits` and `ticks` since these will be different now we have more data.
+
+Having a scale for each map is not ideal because would like to have all the maps on the same scale so we can compare the ocean temperatures across months. We can make it so that we only have one scale using `col.free = FALSE` in `tm_raster()`.
+
+```{r}
+tm_shape(monthly_sst) +
+  tm_raster(col.scale = tm_scale_continuous(values = "ocean.thermal"),
+            col.legend = tm_legend(title = "SST", 
+                                   reverse = TRUE), 
+            col.free = FALSE) +
+  tm_shape(gbr_boundary) +
+  tm_borders() +
+  tm_shape(countries_bordering) +
+  tm_polygons(fill = "sovereignt",
+              fill.scale = tm_scale_categorical(values = c("tan", "forestgreen")),
+              fill.legend = tm_legend(title = ""))
+
+```
+
+We have a single scale for all maps now and we can see the ocean gets warmer in the summer months (November to April - remember this is the Southern hemisphere!), and cooler in the winter. The numbers on our scale have gone a bit weird again though. To fix that, we can set the `ticks = ` argument manually, but we will need to know the minimum and maximum temperature values.
+
+```{r}
+#minimum temperature
+min_temp <- global(monthly_sst, min, na.rm = TRUE) |> min()
+
+#maximum temperature
+max_temp <- global(monthly_sst, max, na.rm = TRUE) |> max()
+
+#create sequence of numbers for the scale
+scale_numbering <- seq(round(min_temp), round(max_temp), by = 2)
+```
+
+We can also create nicer month and year labels for the maps.
+
+```{r}
+month_labels <- c(month.abb[6:12], month.abb[1:5])
+
+month_year_labels <- paste(month_labels, c(rep(2022, 7), rep(2023, 5)), sep = " ")
+```
+
+We can add these labels using `panel.labels = ` argument in the `tm_layout()` function:
+
+```{r}
+tm_shape(monthly_sst) +
+  tm_raster(col.scale = tm_scale_continuous(values = "ocean.thermal",
+                                            ticks = scale_numbering),
+            col.legend = tm_legend(title = "SST", 
+                                   reverse = TRUE), 
+            col.free = FALSE) +
+  tm_shape(gbr_boundary) +
+  tm_borders() +
+  tm_shape(countries_bordering) +
+  tm_polygons(fill = "sovereignt",
+              fill.scale = tm_scale_categorical(values = c("tan", "forestgreen")),
+              fill.legend = tm_legend(title = "")) +
+  tm_layout(panel.labels = month_year_labels)
 ```
 
