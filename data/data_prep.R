@@ -47,3 +47,19 @@ writeRaster(gbr_monthly_temp, "data/gbr_monthly_sst.tif")
 
 #also output a single month
 writeRaster(gbr_monthly_temp[[1]], "data/gbr_sst.tif")
+
+
+###########################################
+#Prep for Crown of Thorns Starfish data downloaded from: https://data.aims.gov.au/data-download/ltmp-exports/nerp_ltmp_cots.csv
+###########################################
+
+#want a single data value per point, so will summarize
+cots_data <- read.csv("https://data.aims.gov.au/data-download/ltmp-exports/nerp_ltmp_cots.csv") |> 
+  vect(geom = c("LON", "LAT")) |> 
+  aggregate(c("REEF_NAME", "REEF_ID")) 
+
+cots_data <- cots_data[, c("REEF_NAME", "REEF_ID", "mean_MEAN_COTS")]
+
+names(cots_data)[3] <- "MEAN_COTS"
+
+writeVector(cots_data, "data/crown_of_thorns_survey.gpkg", overwrite = TRUE)
