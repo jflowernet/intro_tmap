@@ -19,6 +19,7 @@ format:
 This workshop will provide you with an introduction to making maps in R using the R package `tmap`. `tmap` is a relatively simple, but powerful, map making package. The code syntax will look somewhat familiar to `ggplot2` users. Although `ggplot2` can be used for map making, `tmap` is specifically designed for that purpose, and offers greater capabilities such as handling a wider variety of spatial data types and easy interactive mapping.
 
 We will cover:
+
 - Mapping polygons and points
 - Mapping rasters
 - Adding scale bars and a north arrow
