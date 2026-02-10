@@ -4,7 +4,8 @@ This workshop will provide you with an introduction to making maps in R using th
 
 ## Prerequisites 
 
-Apart from `tmap`, we will use the `terra` package for loading and manipulating spatial data, and the `rnaturalearth` package to get some country polygons. All packages can be loaded using the following code: `r install.packages(c("terra", "tmap", "rnaturalearth"))`
+Apart from `tmap`, we will use the `terra` package for loading and manipulating spatial data, and the `rnaturalearth` package to get some country polygons. All packages can be loaded using the following code: 
+`install.packages(c("terra", "tmap", "rnaturalearth"))`
 
 You will also need to have the data within this repository. You can do one of the following depending on how comfortable you are with Github:
 
