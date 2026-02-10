@@ -30,15 +30,15 @@ Basic knowledge of R and spatial data is assumed for this workshop.
 
 *Resources*:
 
-`tmap` recently underwent a major upgrade with the release of version 4. There are a huge number of options for making and customizing maps, and this session will only provide a introduction to some of them. Here are some great resources where you can get more examples:
+There are a huge number of options for making and customizing maps, and this session will only provide a introduction to some of them. Here are some great resources where you can get more examples:
 
 - The official `tmap` [website](https://r-tmap.github.io/tmap/){target="_blank"}, which includes many examples.
 - [Elegant and informative maps with tmap](https://r-tmap.github.io/tmap-book/){target="_blank"}. An in-progress books written by the developers of `tmap`.
-- The [Geocomputation with R: 9 Making Maps in R](https://r.geocompx.org/adv-map#static-maps){target="_blank"} book chapter. The entire books is available free online and is an excellent resource on map making and geospatial data in R in general.
+- The [Geocomputation with R: 9 Making Maps in R](https://r.geocompx.org/adv-map#static-maps){target="_blank"} book chapter. The entire book is available free online and is an excellent resource on map making and geospatial data in R in general.
 
 ## Prerequisites 
 
-Apart from `tmap`, we will use the `terra` package for loading and manipulating spatial data. Both packages can be loaded using the following code
+Apart from `tmap`, we will use the `terra` package for loading and manipulating spatial data, and the `rnaturalearth` package to get some country polygons. All packages can be loaded using the following code:
 
 ```{r}
 #| eval: false
@@ -163,7 +163,7 @@ When the legend is reversed, the marked values on the legend end up looking a bi
 
 ## Scale bar and compass
 
-Our map looks pretty good now, but is missing a scale bar. You might also want to add a north arrow. There are lots of options for these (see `?tm_scale_bar` and `?tm_compass`), but we will just add the defaults, using just one extra line of code for each of these components:
+Our map looks pretty good now, but is missing a scale bar. You might also want to add a north arrow. There are lots of options for these (see `?tm_scalebar` and `?tm_compass`), but we will just add the defaults, using just one extra line of code for each of these components:
 
 ```{r}
 tm_shape(gbr_sst) +
